@@ -1,0 +1,1 @@
+Projeto de banco de dados CRUD + RAG + POSTGRESS
