@@ -11,6 +11,8 @@
     "dev": "node main.js"
   },
   "dependencies": {
+    "@napi-rs/canvas": "^1.2.0",
+    "chart.js": "^4.6.1",
     "ollama": "^0.6.4",
     "pg": "^8.23.1"
   }
