@@ -8,3 +8,7 @@ export async function ollamaEmbed(input) {
     });
     return resposta.embeddings[0];
 }
+
+//aqui deve ter os controles de funções e toma de decisoes via painel
+//exemplo: parecido com o projeto referncia do git 
+
