@@ -1,1 +1,3 @@
-console.log('teste')
+import ping from "./bd/db.js";
+
+await ping();

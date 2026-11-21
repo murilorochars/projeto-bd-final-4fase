@@ -1,6 +1,3 @@
-
-CREATE EXTENSION IF NOT EXISTS vector;
-
 CREATE TABLE departamento (
     id_departamento SERIAL PRIMARY KEY,
     nome VARCHAR(60) UNIQUE NOT NULL,
@@ -49,7 +46,7 @@ CREATE TABLE artigo (
     titulo VARCHAR(150) NOT NULL,
     conteudo TEXT NOT NULL,
     data_publicacao DATE DEFAULT CURRENT_DATE,
-    embedding VECTOR(768),
+    embedding REAL[],
     id_categoria INTEGER NOT NULL,
     FOREIGN KEY(id_categoria) REFERENCES categoria (id_categoria) ON DELETE RESTRICT
 );
@@ -62,7 +59,7 @@ CREATE TABLE chamado (
     data_fechamento TIMESTAMP,
     nota_avaliacao INTEGER CHECK (nota_avaliacao BETWEEN 1 AND 5),
     comentario_avaliacao VARCHAR(255),
-    embedding VECTOR(768),
+    embedding REAL[],
     id_loja INTEGER NOT NULL,
     id_categoria INTEGER NOT NULL,
     id_prioridade INTEGER NOT NULL,
@@ -127,3 +124,9 @@ CREATE TABLE sugere (
     FOREIGN KEY(id_artigo) REFERENCES artigo (id_artigo) ON DELETE CASCADE,
     FOREIGN KEY(id_chamado) REFERENCES chamado (id_chamado) ON DELETE CASCADE
 );
+
+-- Similaridade de cosseno entre dois embeddings (usada pela IA para sugerir artigos e chamados parecidos)
+CREATE OR REPLACE FUNCTION similaridade_cosseno(a REAL[], b REAL[]) RETURNS DOUBLE PRECISION AS $$
+    SELECT SUM(x * y) / NULLIF(SQRT(SUM(x * x)) * SQRT(SUM(y * y)), 0)
+    FROM unnest(a, b) AS t(x, y);
+$$ LANGUAGE sql IMMUTABLE;
