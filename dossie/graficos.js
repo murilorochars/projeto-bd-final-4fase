@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { createCanvas } from '@napi-rs/canvas';
 import { Chart, registerables } from 'chart.js';
 import pool from "../bd/db.js";
-import { erro, aviso, mostrarTabela, traduzirErro, Cor } from "../crud/terminal.js";
+import { erro, mostrarTabela, traduzirErro, Cor } from "../crud/terminal.js";
 
 Chart.register(...registerables);
 
@@ -12,7 +12,6 @@ export const CONSULTAS = [
     {
         titulo: 'Desempenho dos técnicos',
         objetivo: 'Quantidade de chamados atendidos por cada técnico (com o departamento) e a nota média de avaliação dada pelos lojistas.',
-        tabelas: 'tecnico, departamento, chamado',
         sql: `SELECT t.nome AS tecnico,
        d.nome AS departamento,
        COUNT(c.id_chamado)::int AS chamados_atendidos,
@@ -29,7 +28,6 @@ ORDER BY chamados_atendidos DESC, t.nome`,
     {
         titulo: 'Chamados por categoria e situação',
         objetivo: 'Total de chamados de cada categoria de problema e quantos deles ainda não foram fechados, para saber onde está a maior demanda.',
-        tabelas: 'categoria, chamado, status',
         sql: `SELECT cat.nome AS categoria,
        COUNT(c.id_chamado)::int AS total_chamados,
        COUNT(c.id_chamado) FILTER (WHERE s.nome <> 'Fechado')::int AS em_aberto
@@ -45,7 +43,6 @@ ORDER BY total_chamados DESC, cat.nome`,
     {
         titulo: 'Efetividade da IA na base de conhecimento',
         objetivo: 'Para cada artigo: quantas vezes a IA sugeriu, a similaridade média das sugestões e quantas foram marcadas como úteis pelos técnicos.',
-        tabelas: 'artigo, sugere, categoria',
         sql: `SELECT a.titulo AS artigo,
        cat.nome AS categoria,
        COUNT(s.id_chamado)::int AS vezes_sugerido,
@@ -78,12 +75,27 @@ function abrirArquivo(caminho) {
     exec(comando, () => {});
 }
 
+function quebrarRotulo(texto, limite = 18) {
+    const linhas = [];
+    let atual = '';
+    for (const palavra of String(texto).split(' ')) {
+        if ((atual + ' ' + palavra).trim().length > limite && atual) {
+            linhas.push(atual);
+            atual = palavra;
+        } else {
+            atual = (atual + ' ' + palavra).trim();
+        }
+    }
+    if (atual) linhas.push(atual);
+    return linhas;
+}
+
 export async function gerarGrafico(linhas, consulta, indice) {
     const canvas = createCanvas(1000, 550);
     const grafico = new Chart(canvas.getContext('2d'), {
         type: 'bar',
         data: {
-            labels: linhas.map(l => String(l[consulta.rotulo])),
+            labels: linhas.map(l => quebrarRotulo(l[consulta.rotulo])),
             datasets: [{
                 label: consulta.legenda,
                 data: linhas.map(l => Number(l[consulta.valor]) || 0),
@@ -94,11 +106,12 @@ export async function gerarGrafico(linhas, consulta, indice) {
             responsive: false,
             animation: false,
             plugins: {
-                title: { display: true, text: `Consulta ${indice + 1}: ${consulta.titulo}`, font: { size: 18 } }
+                legend: { display: false },
+                title: { display: true, text: consulta.titulo, font: { size: 18 } }
             },
             scales: {
                 y: { beginAtZero: true, suggestedMax: Math.max(...linhas.map(l => Number(l[consulta.valor]) || 0)) + 1, ticks: { precision: 0 }, title: { display: true, text: consulta.legenda } },
-                x: { title: { display: true, text: consulta.rotulo } }
+                x: { ticks: { maxRotation: 0, autoSkip: false }, title: { display: true, text: consulta.rotulo } }
             }
         },
         plugins: [fundoBranco]
@@ -115,15 +128,13 @@ export async function executarConsulta(indice) {
     const consulta = CONSULTAS[indice];
     try {
         console.log(`\n${Cor.CABECALHO}${Cor.NEGRITO}Consulta ${indice + 1}: ${consulta.titulo}${Cor.FIM}`);
-        console.log(`${Cor.AMARELO}Objetivo:${Cor.FIM} ${consulta.objetivo}`);
-        console.log(`${Cor.AMARELO}Tabelas:${Cor.FIM} ${consulta.tabelas}`);
-        console.log(`${Cor.AMARELO}SQL:${Cor.FIM}\n${consulta.sql}`);
+        console.log(`${Cor.AMARELO}Descrição consulta:${Cor.FIM} ${consulta.objetivo}`);
+        console.log(`${Cor.AMARELO}Consulta SQL:${Cor.FIM}\n${consulta.sql}`);
         const resultado = await pool.query(consulta.sql);
-        console.log(`\n${Cor.NEGRITO}Resultado (forma tabular):${Cor.FIM}`);
+        console.log(`\n${Cor.AMARELO}Resultado da consulta:${Cor.FIM}`);
         mostrarTabela(resultado.rows);
         if (resultado.rows.length > 0) {
             const arquivo = await gerarGrafico(resultado.rows, consulta, indice);
-            aviso(`Gráfico gerado com Chart.js: ${arquivo}`);
             abrirArquivo(arquivo);
         }
         return resultado.rows;
