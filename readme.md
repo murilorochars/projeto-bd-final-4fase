@@ -12,7 +12,7 @@
 
 Sistema de helpdesk para lojistas de e-commerce que gerencia o ciclo completo de um chamado técnico: abertura, atendimento, histórico de status, solução e avaliação. Utiliza embeddings gerados localmente pelo Ollama e busca por similaridade no PostgreSQL para sugerir artigos da base de conhecimento e chamados semelhantes já resolvidos.
 
-Trabalho final da disciplina Banco de Dados (DEC7588) — UFSC Araranguá.
+Trabalho final da disciplina Banco de Dados (DEC7588) UFSC Araranguá.
 
 ## Modelagem
 
