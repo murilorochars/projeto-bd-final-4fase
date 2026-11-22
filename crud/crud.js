@@ -140,7 +140,7 @@ export async function rodarSeed() {
     try {
         const seed = await fs.readFile(new URL('../seed.sql', import.meta.url), 'utf-8');
         await pool.query(seed);
-        sucesso('Seed carregada: 2 registros em cada tabela.');
+        sucesso('Seed carregada: dados iniciais em todas as tabelas.');
         return true;
     } catch (err) {
         erro('Erro ao rodar a seed: ' + traduzirErro(err));
