@@ -1,4 +1,4 @@
-<h1 align="center">SmarTech — Sistema Inteligente de Chamados Técnicos</h1>
+<h1 align="center">SmarTech Sistema Inteligente de Chamados Técnicos</h1>
 
 <p align="center">
   <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white"/>
